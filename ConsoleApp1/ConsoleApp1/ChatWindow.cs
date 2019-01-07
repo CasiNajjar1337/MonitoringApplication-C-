@@ -20,7 +20,7 @@ namespace ConsoleApp1
 
                     //  Thread.Sleep(2000);
                     //  Console.WriteLine(i);
-                    if (General.PresenceOfElement("//div[@class='copyable-area']//span[text()='You created this group']"))
+                    if (General.PresenceOfElement("//div[@class='copyable-area']//span[contains(text(),'You created this group']"))
                     {
                         actions.KeyDown(Keys.Control).SendKeys(Keys.Home).Perform();
                         break;
