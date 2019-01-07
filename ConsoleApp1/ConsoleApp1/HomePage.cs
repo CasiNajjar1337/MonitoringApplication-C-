@@ -1,39 +1,38 @@
 ﻿using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
-using SeleniumExtras.WaitHelpers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ConsoleApp1
 {
-    class HomePage 
+    class HomePage
     {
+
+        public static By logInMessage = By.XPath("//h1[text()='Keep your phone connected']");
+        public static By group = By.XPath("//span[@title='" + Variables.groupName + "']");
+        public static By searchBox = By.XPath("//input[@title='Search or start new chat']");
+        public static By searchResult = By.XPath("//span[@dir='auto']/span");
+        public static By groupHeader = By.XPath("//header//span[text()='" + Variables.groupName + "']");
+
+
         public static bool SearchGroup(string groupName)
         {
-            try { 
-            new WebDriverWait(General.driver, TimeSpan.FromSeconds(120)).Until(ExpectedConditions.ElementExists(By.XPath("//h1[text()='Keep your phone connected']")));
-            //Thread.Sleep(3000);
-
-            bool isElementDisplayed = General.PresenceOfElement("//span[@title='" + groupName + "']",5);
-            if (isElementDisplayed)
+            try
             {
-               // Console.WriteLine("If Line");
-                General.driver.FindElement(By.XPath("//span[@title='"+groupName+"']")).Click();
-            }
-            else
-            {
-                //Console.WriteLine("Else Line");
-                General.driver.FindElement(By.XPath("//input[@title='Search or start new chat']")).SendKeys(groupName);
-                new WebDriverWait(General.driver, TimeSpan.FromSeconds(120)).Until(ExpectedConditions.ElementExists(By.XPath("//span[@dir='auto']/span")));
-                General.driver.FindElement(By.XPath("//span[@dir='auto']/span")).Click();
-            }
-               bool status = General.PresenceOfElement("//header//span[text()='" + groupName + "']",15);
-                if (status) { 
-                return true;
+                General.WaitForElement(logInMessage, 120);
+                bool isElementDisplayed = General.PresenceOfElement(group, 5);
+                if (isElementDisplayed)
+                {
+                    General.ClickElement(group);
+                }
+                else
+                {
+                    General.SendText(searchBox, Variables.groupName);
+                    General.WaitForElement(searchResult, 60);
+                    General.ClickElement(searchResult);
+                }
+                bool status = General.PresenceOfElement(groupHeader, 15);
+                if (status)
+                {
+                    return true;
                 }
                 else
                 {

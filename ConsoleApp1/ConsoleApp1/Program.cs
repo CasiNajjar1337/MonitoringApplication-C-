@@ -7,22 +7,21 @@ namespace ConsoleApp1
         static void Main(string[] args)
         {
             
-            General.OpenBrowser("https://web.whatsapp.com/");
-            HomePage.SearchGroup("TestDemo");
-            //Setting up the data base and creating a table
-            SQLLiteConn.SetConnection("Test");
-            SQLLiteConn.CreateTable("Sample", "FirstNameOrPhoneNo", "LastName", "Message", "TimeStamp");
+            General.OpenBrowser(Variables.uRL);
+            HomePage.SearchGroup(Variables.groupName);
+            //Setting up the data base
+            SQLLiteConn.SetConnection(Variables.dataBase);
+            //Creating the table
+            SQLLiteConn.CreateTable(Variables.tableName, Variables.columnName1, Variables.columnName2, Variables.columnName3, Variables.columnName4);
             ChatWindow.ScrollToTop();
-            ChatWindow.StoreInitialTexts("Sample");
-            ChatWindow.MonitorForNewMessages("Sample");
-           // SQLLiteConn.GetData("SELECT COUNT (Message) FROM Sample");
-
-
+            ChatWindow.StoreInitialTexts();
+            ChatWindow.MonitorForNewMessages();
+           
             Console.WriteLine("Enter Key to Quit");
             Console.ReadKey();
 
             SQLLiteConn.CloseConn();
-            General.CloseDriver();// driver.Quit();
+            General.CloseDriver();
         }
 
 

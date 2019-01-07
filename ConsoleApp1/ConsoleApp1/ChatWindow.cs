@@ -7,26 +7,32 @@ namespace ConsoleApp1
 {
     class ChatWindow
     {
+        public static By chatArea = By.XPath("//div[@class='_2nmDZ']");
+        private static By creationMessage = By.XPath("//div[@class='copyable-area']//span[contains(text(),'created group']");
+        private static By newMessageIndicator = By.XPath("//div[@role='button']//span[@class='OUeyt']");
+        private static By downButton = By.XPath("//div[@role='button']//span[@data-icon='down']");
+        private static By unreadMessageBar = By.XPath("//div[contains(@class,'1mq8g')]/span[contains(text(),'unread message')]");
+        private static By countOfNewMessages = By.XPath("//div[contains(@class,'1mq8g')]/following-sibling::div[contains(@class,'vW7d1')]");
+        private static By numberOfEntries = By.XPath("//div[contains(@class,'vW7d1')]");
+        private static By numberOfMessages = By.XPath("//div[contains(@class,'vW7d1')]/div[contains(@class,'message')]");
+
+
         public static bool ScrollToTop()
         {
             try
             {
-                General.driver.FindElement(By.XPath("//div[@class='_2nmDZ']")).Click();
-
+                General.ClickElement(chatArea);
                 for (Int32 i = 1; ; i++)
                 {
                     Actions actions = new Actions(General.driver);
                     actions.KeyDown(Keys.Control).SendKeys(Keys.Home).Perform();
 
-                    //  Thread.Sleep(2000);
-                    //  Console.WriteLine(i);
-                    if (General.PresenceOfElement("//div[@class='copyable-area']//span[contains(text(),'You created this group']"))
+                    if (General.PresenceOfElement(creationMessage))
                     {
                         actions.KeyDown(Keys.Control).SendKeys(Keys.Home).Perform();
                         break;
                     }
                 }
-                //Thread.Sleep(3000);
                 Console.WriteLine("***At the start of the Chat***");
                 return true;
             }
@@ -42,12 +48,12 @@ namespace ConsoleApp1
             {
                 for(; ; )
                 {
-                    if(!General.PresenceOfElement("//div[@class='copyable-area']//span[text()='You created this group']", 60)||General.PresenceOfElement("//div[@role='button']//span[@class='OUeyt']",60))
+                    if(!General.PresenceOfElement(creationMessage, 60)||General.PresenceOfElement(newMessageIndicator,60))
                     {
-                        General.driver.FindElement(By.XPath("//div[@role='button']//span[@data-icon='down']")).Click();
-                        if (General.PresenceOfElement("//div[contains(@class,'1mq8g')]/span[contains(text(),'unread message')]"))
+                        General.ClickElement(downButton);
+                        if (General.PresenceOfElement(unreadMessageBar))
                         {
-                            Int32 count = General.driver.FindElements(By.XPath("//div[contains(@class,'1mq8g')]/following-sibling::div[contains(@class,'vW7d1')]")).Count;
+                            Int32 count = General.GetElementCount(countOfNewMessages);
                             Console.WriteLine("Found " + count + " unread Messages");
                             for (Int32 i = 1; i<= count; i++)
                             {
@@ -58,12 +64,12 @@ namespace ConsoleApp1
                                 string timeStamp = str[0] + " " + str[1];
                                 if (str.Count() == 4)
                                 {
-                                    SQLLiteConn.CreateAndInsertToTable(tableName, "FirstNameOrPhoneNo", "LastName", "Message", "TimeStamp", str[2], str[3], message, timeStamp);
+                                    SQLLiteConn.CreateAndInsertToTable(Variables.tableName, Variables.columnName1, Variables.columnName2, Variables.columnName3, Variables.columnName4, str[2], str[3], message, timeStamp);
                                     ScrollToTop();
                                 }
                                 else
                                 {
-                                    SQLLiteConn.CreateAndInsertToTable(tableName, "FirstNameOrPhoneNo", "LastName", "Message", "TimeStamp", str[2], "", message, timeStamp);
+                                    SQLLiteConn.CreateAndInsertToTable(Variables.tableName, Variables.columnName1, Variables.columnName2, Variables.columnName3, Variables.columnName4, str[2], "", message, timeStamp);
                                     ScrollToTop();
                                 }
 
@@ -83,13 +89,13 @@ namespace ConsoleApp1
         {
             try
             {
-                Int32 numberOfEntries = General.driver.FindElements(By.XPath("//div[contains(@class,'vW7d1')]")).Count;
-                Int32 numberOfMessages = General.driver.FindElements(By.XPath("//div[contains(@class,'vW7d1')]/div[contains(@class,'message')]")).Count;
+                Int32 countOfEntries = General.GetElementCount(numberOfEntries);
+                Int32 countOfMessages = General.driver.FindElements(numberOfMessages).Count;
                 Console.WriteLine(numberOfMessages);
                 //Int32 numberOfActualTexts = numberOfMessages + 4;
-                Int32 countOfEntries = 0;
+                Int32 countOfEntredRecords = 0;
                 //Console.WriteLine("Total Number of Texts in the chat Window are :: " + numberOfActualTexts);
-                for (Int32 i = 1; i <= numberOfEntries; i++)
+                for (Int32 i = 1; i <= countOfEntries; i++)
                 {
                     if (General.PresenceOfElement("//div[contains(@class,'vW7d1')][" + i + "]//div[contains(@class,'copyable-text')]"))
                     {
@@ -101,13 +107,13 @@ namespace ConsoleApp1
                         string timeStamp = str[0] + " " + str[1];
                         if (str.Count() == 4)
                         {
-                            SQLLiteConn.CreateAndInsertToTable(tableName, "FirstNameOrPhoneNo", "LastName", "Message", "TimeStamp", str[2], str[3], message, timeStamp);
-                            countOfEntries++;
+                            SQLLiteConn.CreateAndInsertToTable(Variables.tableName, Variables.columnName1, Variables.columnName2, Variables.columnName3, Variables.columnName4, str[2], str[3], message, timeStamp);
+                            countOfEntredRecords++;
                         }
                         else
                         {
-                            SQLLiteConn.CreateAndInsertToTable(tableName, "FirstNameOrPhoneNo", "LastName", "Message", "TimeStamp", str[2], "", message, timeStamp);
-                            countOfEntries++;
+                            SQLLiteConn.CreateAndInsertToTable(Variables.tableName, Variables.columnName1, Variables.columnName2, Variables.columnName3, Variables.columnName4, str[2], "", message, timeStamp);
+                            countOfEntredRecords++;
                         }
                     }
                     else

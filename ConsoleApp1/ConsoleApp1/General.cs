@@ -3,10 +3,6 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConsoleApp1
 {
@@ -22,35 +18,142 @@ namespace ConsoleApp1
                 driver.Navigate().GoToUrl(URL);
                 driver.Manage().Window.Maximize();
                 return true;
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 return false;
             }
         }
-        public static bool PresenceOfElement(String locator)
+
+        public static bool FindElement(By locator)
         {
             try
             {
-                //new WebDriverWait(General.driver, TimeSpan.FromSeconds(timeOut)).Until(ExpectedConditions.ElementExists(By.XPath(locator)));
-                driver.FindElement(By.XPath(locator));
-                Console.WriteLine("Element Found");
+                driver.FindElement(locator);
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine("Element not found " + locator);
                 return false;
             }
 
         }
-        public static bool PresenceOfElement(String locator, int timeOut)
+
+        public static bool ClickElement(By locator)
         {
             try
             {
-                new WebDriverWait(General.driver, TimeSpan.FromSeconds(timeOut)).Until(ExpectedConditions.ElementExists(By.XPath(locator)));
-                //driver.FindElement(By.XPath(locator));
-                Console.WriteLine("Element Found");
+                IWebElement element = driver.FindElement(locator);
+                element.Click();
                 return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+        }
+
+        public static string GetText(By locator)
+        {
+            try
+            {
+                IWebElement element = driver.FindElement(locator);
+                string txt = element.Text;
+                return txt;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+
+        }
+
+        public static Int32 GetElementCount(By locator)
+        {
+            try
+            {
+                Int32 count = General.driver.FindElements(locator).Count;
+                return count;
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+
+        }
+        
+        public static bool SendText(By locator, string txt)
+        {
+            try
+            {
+                IWebElement element = driver.FindElement(locator);
+                element.SendKeys(txt);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+        }
+
+        public static bool WaitForElement(By locator, int timeout)
+        {
+            try
+            {
+                new WebDriverWait(driver, TimeSpan.FromSeconds(timeout)).Until(ExpectedConditions.ElementExists(locator));
+                return true;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Element not appeared in given time");
+                return false;
+            }
+
+        }
+
+        public static bool PresenceOfElement(By locator)
+        {
+            try
+            {
+                FindElement(locator);
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+
+        }
+
+        public static bool PresenceOfElement(string locator)
+        {
+            try
+            {
+                driver.FindElement(By.XPath(locator));
+                return true;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+
+        }
+
+        public static bool PresenceOfElement(By locator, int timeOut)
+        {
+            try
+            {
+                //new WebDriverWait(General.driver, TimeSpan.FromSeconds(timeOut)).Until(ExpectedConditions.ElementExists(By.XPath(locator)));
+                bool status = WaitForElement(locator, timeOut);
+                if (status)
+                {
+                    Console.WriteLine("Element Found");
+                    return true;
+                }
+                else
+                    return false;
             }
             catch (Exception e)
             {
