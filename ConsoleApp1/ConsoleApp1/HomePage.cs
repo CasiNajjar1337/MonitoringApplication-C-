@@ -31,13 +31,9 @@ namespace ConsoleApp1
                 }
                 bool status = General.PresenceOfElement(groupHeader, 15);
                 if (status)
-                {
                     return true;
-                }
                 else
-                {
-                    return false;
-                }
+                   return false;
             }
             catch (Exception)
             {

@@ -1,4 +1,5 @@
-﻿using OpenQA.Selenium;
+﻿using Finisar.SQLite;
+using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 using System;
 using System.Linq;
@@ -8,14 +9,13 @@ namespace ConsoleApp1
     class ChatWindow
     {
         public static By chatArea = By.XPath("//div[@class='_2nmDZ']");
-        private static By creationMessage = By.XPath("//div[@class='copyable-area']//span[contains(text(),'created group']");
+        private static By creationMessage = By.XPath("//div[@class='copyable-area']//span[contains(text(),'created') and contains(text(), 'group')]");
         private static By newMessageIndicator = By.XPath("//div[@role='button']//span[@class='OUeyt']");
         private static By downButton = By.XPath("//div[@role='button']//span[@data-icon='down']");
         private static By unreadMessageBar = By.XPath("//div[contains(@class,'1mq8g')]/span[contains(text(),'unread message')]");
         private static By countOfNewMessages = By.XPath("//div[contains(@class,'1mq8g')]/following-sibling::div[contains(@class,'vW7d1')]");
         private static By numberOfEntries = By.XPath("//div[contains(@class,'vW7d1')]");
         private static By numberOfMessages = By.XPath("//div[contains(@class,'vW7d1')]/div[contains(@class,'message')]");
-
 
         public static bool ScrollToTop()
         {
@@ -30,10 +30,11 @@ namespace ConsoleApp1
                     if (General.PresenceOfElement(creationMessage))
                     {
                         actions.KeyDown(Keys.Control).SendKeys(Keys.Home).Perform();
+                        Console.WriteLine("***At the start of the Chat***");
                         break;
                     }
                 }
-                Console.WriteLine("***At the start of the Chat***");
+                
                 return true;
             }
             catch (Exception)
@@ -42,7 +43,7 @@ namespace ConsoleApp1
             }
         }
 
-        public static bool MonitorForNewMessages(string tableName)
+        public static bool MonitorForNewMessages()
         {
             try
             {
@@ -59,30 +60,59 @@ namespace ConsoleApp1
                             {
                                 string tmp = General.driver.FindElement(By.XPath("//div[contains(@class,'1mq8g')]/following-sibling::div[contains(@class,'vW7d1')][" + i + "]//div[contains(@class,'copyable-text')]")).GetAttribute("data-pre-plain-text");
                                 string[] str = tmp.Replace("[", "").Replace("]", "").Replace(",", "").Replace(": ", "").Split(' ');
-                                string message = General.driver.FindElement(By.XPath("//div[contains(@class,'1mq8g')]/following-sibling::div[contains(@class,'vW7d1')][" + i + "]//div[contains(@class,'copyable-text')]//span")).Text;
-                                message = message.Replace("'", "");
-                                string timeStamp = str[0] + " " + str[1];
-                                if (str.Count() == 4)
-                                {
-                                    SQLLiteConn.CreateAndInsertToTable(Variables.tableName, Variables.columnName1, Variables.columnName2, Variables.columnName3, Variables.columnName4, str[2], str[3], message, timeStamp);
-                                    ScrollToTop();
-                                }
-                                else
-                                {
-                                    SQLLiteConn.CreateAndInsertToTable(Variables.tableName, Variables.columnName1, Variables.columnName2, Variables.columnName3, Variables.columnName4, str[2], "", message, timeStamp);
-                                    ScrollToTop();
-                                }
+                                Variables.message = General.driver.FindElement(By.XPath("//div[contains(@class,'1mq8g')]/following-sibling::div[contains(@class,'vW7d1')][" + i + "]//div[contains(@class,'copyable-text')]//span")).Text;
+                                Variables.message = Variables.message.Replace("'", "");
 
+                                if (str[1].ToLower().Equals("am") || str[1].ToLower().Equals("pm"))
+                                    Variables.timeFormat = "12 Hours Format";
+                                else
+                                    Variables.timeFormat = "24 Hours Format";
+
+                                if (Variables.timeFormat.Equals("24 Hours Format"))
+                                {
+                                    Variables.timeStamp = str[0] + " " + str[1];
+                                    if (str.Count() == 4)
+                                    {
+                                        SQLLiteConn.SetConnectionToExistingDB();
+                                        SQLLiteConn.InsertRecords(str[2], str[3], Variables.message, Variables.timeStamp);
+                                        SQLLiteConn.CloseConn();
+                                        ScrollToTop();
+                                    }
+                                    else if (str.Count() == 3)
+                                    {
+                                        SQLLiteConn.SetConnectionToExistingDB();
+                                        SQLLiteConn.InsertRecords(str[2], "", Variables.message, Variables.timeStamp);
+                                        SQLLiteConn.CloseConn();
+                                        ScrollToTop();
+                                    }
+                                }
+                                else if (Variables.timeFormat.Equals("12 Hours Format"))
+                                {
+                                    Variables.timeStamp = str[0] + " " + str[1] + " " + str[2];
+                                    if (str.Count() == 5)
+                                    {
+                                        SQLLiteConn.SetConnectionToExistingDB();
+                                        SQLLiteConn.InsertRecords(str[3], str[4], Variables.message, Variables.timeStamp);
+                                        SQLLiteConn.CloseConn();
+                                        ScrollToTop();
+                                    }
+                                    else if (str.Count() == 4)
+                                    {
+                                        SQLLiteConn.SetConnectionToExistingDB();
+                                        SQLLiteConn.InsertRecords(str[3], "", Variables.message, Variables.timeStamp);
+                                        SQLLiteConn.CloseConn();
+                                        ScrollToTop();
+                                    }
+                                }
                             }
                         }
                     }
                 }
-                return true;
             }catch(Exception e)
             {
+                Console.WriteLine("Exception Raised while waiting for new message " + e.GetBaseException());
                 return false;
             }
-            
         }
 
         public static bool StoreInitialTexts(string tableName)
@@ -92,9 +122,7 @@ namespace ConsoleApp1
                 Int32 countOfEntries = General.GetElementCount(numberOfEntries);
                 Int32 countOfMessages = General.driver.FindElements(numberOfMessages).Count;
                 Console.WriteLine(numberOfMessages);
-                //Int32 numberOfActualTexts = numberOfMessages + 4;
                 Int32 countOfEntredRecords = 0;
-                //Console.WriteLine("Total Number of Texts in the chat Window are :: " + numberOfActualTexts);
                 for (Int32 i = 1; i <= countOfEntries; i++)
                 {
                     if (General.PresenceOfElement("//div[contains(@class,'vW7d1')][" + i + "]//div[contains(@class,'copyable-text')]"))
@@ -102,18 +130,41 @@ namespace ConsoleApp1
                         Console.WriteLine(i);
                         string tmp = General.driver.FindElement(By.XPath("//div[contains(@class,'vW7d1')][" + i + "]//div[contains(@class,'copyable-text')]")).GetAttribute("data-pre-plain-text");
                         string[] str = tmp.Replace("[", "").Replace("]", "").Replace(",", "").Replace(": ", "").Split(' ');
-                        string message = General.driver.FindElement(By.XPath("//div[contains(@class,'vW7d1')][" + i + "]//div[contains(@class,'copyable-text')]//span")).Text;
-                        message = message.Replace("'", "");
-                        string timeStamp = str[0] + " " + str[1];
-                        if (str.Count() == 4)
-                        {
-                            SQLLiteConn.CreateAndInsertToTable(Variables.tableName, Variables.columnName1, Variables.columnName2, Variables.columnName3, Variables.columnName4, str[2], str[3], message, timeStamp);
-                            countOfEntredRecords++;
-                        }
+                        Variables.message = General.driver.FindElement(By.XPath("//div[contains(@class,'vW7d1')][" + i + "]//div[contains(@class,'copyable-text')]//span")).Text;
+                        Variables.message = Variables.message.Replace("'", "");
+
+                        if (str[1].ToLower().Equals("am") || str[1].ToLower().Equals("pm"))
+                            Variables.timeFormat = "12 Hours Format";
                         else
+                            Variables.timeFormat = "24 Hours Format";
+                      
+                        if (Variables.timeFormat.Equals("24 Hours Format"))
                         {
-                            SQLLiteConn.CreateAndInsertToTable(Variables.tableName, Variables.columnName1, Variables.columnName2, Variables.columnName3, Variables.columnName4, str[2], "", message, timeStamp);
-                            countOfEntredRecords++;
+                            Variables.timeStamp = str[0] + " " + str[1];
+                            if (str.Count() == 4)
+                            {
+                                SQLLiteConn.InsertRecords(str[2], str[3], Variables.message, Variables.timeStamp);
+                                countOfEntredRecords++;
+                            }
+                            else if (str.Count() == 3)
+                            {
+                                SQLLiteConn.InsertRecords(str[2], "", Variables.message, Variables.timeStamp);
+                                countOfEntredRecords++;
+                            }
+                        }
+                        else if (Variables.timeFormat.Equals("12 Hours Format"))
+                        {
+                            Variables.timeStamp = str[0] + " " + str[1] + " " + str[2];
+                            if (str.Count() == 5)
+                            {
+                                SQLLiteConn.InsertRecords(str[3], str[4], Variables.message, Variables.timeStamp);
+                                countOfEntredRecords++;
+                            }
+                            else if (str.Count() == 4)
+                            {
+                                SQLLiteConn.InsertRecords(str[3], "", Variables.message, Variables.timeStamp);
+                                countOfEntredRecords++;
+                            }
                         }
                     }
                     else
@@ -121,7 +172,7 @@ namespace ConsoleApp1
                         continue;
                     }
                 }
-                Console.WriteLine("Total Number of Records entered in DB are " + countOfEntries);
+                Console.WriteLine("Total Number of Records entered in DB are " + countOfEntredRecords);
                 return true;
             }
             catch (Exception)

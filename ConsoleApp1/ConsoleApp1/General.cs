@@ -19,7 +19,7 @@ namespace ConsoleApp1
                 driver.Manage().Window.Maximize();
                 return true;
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 return false;
             }
@@ -117,10 +117,13 @@ namespace ConsoleApp1
         {
             try
             {
-                FindElement(locator);
-                return true;
+               bool status= FindElement(locator);
+                if (status)
+                    return true;
+                else
+                    return false;
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 return false;
             }
@@ -134,7 +137,7 @@ namespace ConsoleApp1
                 driver.FindElement(By.XPath(locator));
                 return true;
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 return false;
             }
@@ -145,7 +148,6 @@ namespace ConsoleApp1
         {
             try
             {
-                //new WebDriverWait(General.driver, TimeSpan.FromSeconds(timeOut)).Until(ExpectedConditions.ElementExists(By.XPath(locator)));
                 bool status = WaitForElement(locator, timeOut);
                 if (status)
                 {
@@ -155,7 +157,7 @@ namespace ConsoleApp1
                 else
                     return false;
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 return false;
             }
